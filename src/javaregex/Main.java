@@ -28,63 +28,24 @@ public class Main {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
+        String filename = "TelephoneNumbers.txt";
+        String remoteurl = "http://ktozvonit.com.ua/operators/067/15/0000000-0009999";
 
-        FileOutputStream fos = null;
-        try {
+        Pattern phonePattern = Pattern.compile("\\(\\d{3}\\)\\s*\\d{3}\\-\\d{2}\\-\\d{2}");
 
-            File file = new File("TelephoneNumber.txt");
-            if (!file.exists()) {
-                file.createNewFile();
-            }
-            fos = new FileOutputStream("TelephoneNumber.txt");
-            try {
+        File file = new File(filename);
 
-                URL url = new URL("http://ktozvonit.com.ua/operators/067/15/0000000-0009999");
-                BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()));
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    //System.out.println(line);
-                    Pattern pattern = Pattern.compile("\\(\\d{3}\\)\\s*\\d{3}\\-\\d{2}\\-\\d{2}");
-                    Matcher matcher = pattern.matcher(line);
-
-                    while (matcher.find()) {
-                        String group = matcher.group();
-                        //System.out.println(group);
-                        StringBuilder sb = new StringBuilder(group);
-                        sb.deleteCharAt(1);
-                        sb.insert(0, '+');
-                        sb.insert(1, '3');
-                        sb.insert(2, '8');
-                        sb.insert(3, '0');
-                        sb.insert(4, ' ');
-                        String newGroup = sb.toString();
-                        //System.out.println(newGroup);
-                        byte[] bytes = newGroup.getBytes();
-                        fos.write(bytes);
-                        fos.write('\n');
-
+        try (FileOutputStream fos = new FileOutputStream(file)) {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(new URL(remoteurl).openStream()))) {
+                for (String line; (line = reader.readLine()) != null;) {
+                    for (Matcher matcher = phonePattern.matcher(line); matcher.find();) {
+                        fos.write(new StringBuilder(matcher.group()).deleteCharAt(1).insert(0, "+380 ")
+                                .append("\n").toString().getBytes());
                     }
-
                 }
-                reader.close();
-                //fos.close();
-
-            } catch (MalformedURLException ex) {
-                Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
-            } catch (IOException ex) {
-                Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
             }
-
-        } catch (FileNotFoundException ex) {
-            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
-        } finally {
-            try {
-                fos.close();
-            } catch (IOException ex) {
-                Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
-            }
         }
 
     }
